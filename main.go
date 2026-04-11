@@ -1,12 +1,12 @@
 package main
 
 import (
+	_ "embed"
 	"flag"
 	"fmt"
 	"io"
 	"os"
 	"strconv"
-	_ "embed"
 )
 
 //go:embed VERSION
@@ -15,7 +15,7 @@ var VERSION string
 // counter implements flag.Value for counting repeated flag occurrences.
 type counter int
 
-func (c *counter) String() string { return strconv.Itoa(int(*c)) }
+func (c *counter) String() string   { return strconv.Itoa(int(*c)) }
 func (c *counter) Set(string) error { *c++; return nil }
 func (c *counter) IsBoolFlag() bool { return true }
 
