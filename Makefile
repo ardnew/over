@@ -1,6 +1,6 @@
 SHELL := $(firstword $(shell which bash sh))
 
-modpkg := $(shell go list -f '{{.Name}}' .)
+modpkg := $(shell basename $(shell go list -f '{{.Target}}' .))
 moddir := $(shell go list -f '{{.Dir}}' .)
 modimp := $(shell go list -f '{{.ImportPath}}' .)
 
