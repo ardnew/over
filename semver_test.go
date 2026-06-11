@@ -105,7 +105,7 @@ func TestFindSemVer(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			v, ok := FindSemVer([]byte(tt.input))
+			v, ok := MakeSemVer([]byte(tt.input))
 			if ok != tt.ok {
 				t.Fatalf("FindSemVer(%q) ok = %v, want %v", tt.input, ok, tt.ok)
 			}
@@ -149,7 +149,7 @@ func TestBump(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			v, ok := FindSemVer([]byte(tt.input))
+			v, ok := MakeSemVer([]byte(tt.input))
 			if !ok {
 				t.Fatalf("FindSemVer(%q) failed", tt.input)
 			}
@@ -203,10 +203,10 @@ func TestString(t *testing.T) {
 		v    SemVer
 		want string
 	}{
-		{SemVer{1, 2, 3, nil, nil}, "1.2.3"},
-		{SemVer{1, 0, 0, []string{"alpha"}, nil}, "1.0.0-alpha"},
-		{SemVer{1, 0, 0, nil, []string{"001"}}, "1.0.0+001"},
-		{SemVer{1, 0, 0, []string{"beta", "1"}, []string{"exp", "sha", "5114f85"}}, "1.0.0-beta.1+exp.sha.5114f85"},
+		{SemVer{1, 2, 3, nil, nil, ""}, "1.2.3"},
+		{SemVer{1, 0, 0, []string{"alpha"}, nil, ""}, "1.0.0-alpha"},
+		{SemVer{1, 0, 0, nil, []string{"001"}, ""}, "1.0.0+001"},
+		{SemVer{1, 0, 0, []string{"beta", "1"}, []string{"exp", "sha", "5114f85"}, ""}, "1.0.0-beta.1+exp.sha.5114f85"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.want, func(t *testing.T) {

@@ -28,12 +28,14 @@ func usage() {
 	fmt.Fprintf(os.Stderr, "Input is read from the first non-flag argument, or from stdin if\n")
 	fmt.Fprintf(os.Stderr, "no arguments are provided.\n\n")
 	fmt.Fprintf(os.Stderr, "Flags:\n")
+	fmt.Fprintf(os.Stderr, "  --help         Print this help message\n\n")
 	fmt.Fprintf(os.Stderr, "  --major        Increment the major version (repeatable)\n")
 	fmt.Fprintf(os.Stderr, "  --minor        Increment the minor version (repeatable)\n")
 	fmt.Fprintf(os.Stderr, "  --patch        Increment the patch version (repeatable)\n")
 	fmt.Fprintf(os.Stderr, "  --prerelease   Retain pre-release label when bumping\n")
-	fmt.Fprintf(os.Stderr, "  --build        Retain build metadata when bumping\n")
-	fmt.Fprintf(os.Stderr, "  --help         Print this help message\n")
+	fmt.Fprintf(os.Stderr, "  --build        Retain build metadata when bumping\n\n")
+	fmt.Fprintf(os.Stderr, "  --json         Encode components using JSON (compact)\n")
+	fmt.Fprintf(os.Stderr, "  --jsonpp       Encode components using JSON (pretty-printed)\n")
 }
 
 // readFirstLine reads from r until EOF, \n, or \0 and returns the bytes.
@@ -69,6 +71,10 @@ func run() int {
 	fs.Var(&patch, "patch", "")
 	fs.BoolVar(&prerelease, "prerelease", false, "")
 	fs.BoolVar(&build, "build", false, "")
+
+	var json, jsonpp bool
+	fs.BoolVar(&json, "json", false, "")
+	fs.BoolVar(&jsonpp, "jsonpp", false, "")
 
 	help := false
 	fs.BoolVar(&help, "help", false, "")
@@ -109,7 +115,7 @@ func run() int {
 		}
 	}
 
-	v, ok := FindSemVer(input)
+	v, ok := MakeSemVer(input, WithJSONIndent(`  `))
 	if !ok {
 		return 1
 	}
@@ -134,7 +140,16 @@ func run() int {
 		}
 	}
 
-	fmt.Println(v)
+	format := v.String
+	switch {
+	// --jsonpp takes precedence over --json
+	case jsonpp:
+		format = v.PrettyJSON
+	case json:
+		format = v.JSON
+	}
+
+	fmt.Println(format())
 	return 0
 }
 

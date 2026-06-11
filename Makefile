@@ -6,7 +6,7 @@ modimp := $(shell go list -f '{{.ImportPath}}' .)
 
 modsemver := $(shell cat "$(moddir)/VERSION" 2>/dev/null)
 tagsemver := $(shell git describe --tags --abbrev=0 2>/dev/null)
-newsemver := $(or $(tagsemver),$(modsemver))
+newsemver := $(or $(modsemver),$(tagsemver))
 
 output := dist
 assets := README.md LICENSE

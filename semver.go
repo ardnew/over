@@ -1,19 +1,61 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
 )
 
-// SemVer represents a parsed semantic version 2.0.0 string.
+// [SemVer] represents a parsed semantic version 2.0.0 string.
+//
+// [SemVer]: https://semver.org/
 type SemVer struct {
-	Major      uint64
-	Minor      uint64
-	Patch      uint64
-	PreRelease []string // nil means absent, empty slice not possible per BNF
-	Build      []string // nil means absent
+	Major      uint64   `json:"major"`
+	Minor      uint64   `json:"minor"`
+	Patch      uint64   `json:"patch"`
+	PreRelease []string `json:"prerelease,omitempty,omitzero"` // nil means absent, empty slice not possible per BNF
+	Build      []string `json:"build,omitempty,omitzero"`      // nil means absent
+
+	indent string `json:"-"`
 }
+
+// MakeSemVer scans the input for the first valid semver substring.
+// Returns the parsed SemVer and true if found, or zero value and false.
+func MakeSemVer(input []byte, opts ...func(*SemVer)) (SemVer, bool) {
+	for i := range input {
+		if isDigit(input[i]) {
+			v, _, ok := parseSemVer(input, i)
+			if ok {
+				for _, opt := range opts {
+					opt(&v)
+				}
+				return v, true
+			}
+		}
+	}
+	return SemVer{}, false
+}
+
+// WithJSONIndent returns an option to set the indentation for pretty JSON.
+func WithJSONIndent(indent string) func(*SemVer) {
+	return func(v *SemVer) { v.indent = indent }
+}
+
+// BumpMajor increments major, resets minor and patch to 0.
+func (v *SemVer) BumpMajor() { v.Major++; v.Minor = 0; v.Patch = 0 }
+
+// BumpMinor increments minor, resets patch to 0.
+func (v *SemVer) BumpMinor() { v.Minor++; v.Patch = 0 }
+
+// BumpPatch increments patch.
+func (v *SemVer) BumpPatch() { v.Patch++ }
+
+// StripPreRelease removes the pre-release component.
+func (v *SemVer) StripPreRelease() { v.PreRelease = nil }
+
+// StripBuild removes the build metadata component.
+func (v *SemVer) StripBuild() { v.Build = nil }
 
 // String returns the canonical semver string representation.
 func (v SemVer) String() string {
@@ -40,20 +82,17 @@ func (v SemVer) String() string {
 	return b.String()
 }
 
-// BumpMajor increments major, resets minor and patch to 0.
-func (v *SemVer) BumpMajor() { v.Major++; v.Minor = 0; v.Patch = 0 }
+// JSON returns the JSON string representation of the SemVer.
+func (v SemVer) JSON() string {
+	b, _ := json.Marshal(v)
+	return string(b)
+}
 
-// BumpMinor increments minor, resets patch to 0.
-func (v *SemVer) BumpMinor() { v.Minor++; v.Patch = 0 }
-
-// BumpPatch increments patch.
-func (v *SemVer) BumpPatch() { v.Patch++ }
-
-// StripPreRelease removes the pre-release component.
-func (v *SemVer) StripPreRelease() { v.PreRelease = nil }
-
-// StripBuild removes the build metadata component.
-func (v *SemVer) StripBuild() { v.Build = nil }
+// PrettyJSON returns the pretty JSON string representation of the SemVer.
+func (v SemVer) PrettyJSON() string {
+	b, _ := json.MarshalIndent(v, "", v.indent)
+	return string(b)
+}
 
 // --- BNF Parser ---
 // All parse functions operate on a byte slice and return the advance count.
@@ -223,18 +262,4 @@ func parseSemVer(data []byte, pos int) (SemVer, int, bool) {
 	}
 
 	return v, cur, true
-}
-
-// FindSemVer scans the input for the first valid semver substring.
-// Returns the parsed SemVer and true if found, or zero value and false.
-func FindSemVer(input []byte) (SemVer, bool) {
-	for i := 0; i < len(input); i++ {
-		if isDigit(input[i]) {
-			v, _, ok := parseSemVer(input, i)
-			if ok {
-				return v, true
-			}
-		}
-	}
-	return SemVer{}, false
 }
