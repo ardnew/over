@@ -57,6 +57,8 @@ Input is read from the first non-flag argument or from **stdin**. If no bump fla
 | `--patch` | Increment patch version (repeatable) |
 | `--prerelease` | Retain pre-release label when bumping |
 | `--build` | Retain build metadata when bumping |
+| `--json` | Encode components using JSON (compact) |
+| `--jsonpp` | Encode components using JSON (pretty-printed) |
 
 ## Examples
 
@@ -149,6 +151,34 @@ Retain both:
 ```sh
 $ over --major --prerelease --build 1.0.0-beta+exp
 2.0.0-beta+exp
+```
+
+### JSON Encoding
+
+Encode components in a compact, in-line format with `--json`:
+
+```sh
+$ over --json 1.2.3
+{"major":1,"minor":2,"patch":3}
+```
+
+Add line breaks and indentation with `--jsonpp`:
+
+```sh
+$ over --jsonpp --minor --build --prerelease 0.2.1-1-1.0+1.2-1
+{
+  "major": 0,
+  "minor": 3,
+  "patch": 0,
+  "prerelease": [
+    "1-1",
+    "0"
+  ],
+  "build": [
+    "1",
+    "2-1"
+  ]
+}
 ```
 
 ### Exit code
